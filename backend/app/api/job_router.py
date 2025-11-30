@@ -1,0 +1,42 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from uuid import UUID
+from app.db.job import Job
+from app.schemas.job import JobCreate, JobRead
+from app.dependencies import get_db
+from app.utils.task_helpers import run_job_in_background
+
+router = APIRouter(prefix="/jobs", tags=["Jobs"])
+
+@router.post("/", response_model=JobRead)
+def create_job(data: JobCreate, db: Session = Depends(get_db)):
+    new_job = Job(**data.dict())
+    db.add(new_job)
+    db.commit()
+    db.refresh(new_job)
+
+    # Trigger background processing
+    run_job_in_background(str(new_job.id))
+    return new_job
+
+@router.get("/", response_model=list[JobRead])
+def list_jobs(db: Session = Depends(get_db), skip: int = 0, limit: int = 10):
+    return db.query(Job).offset(skip).limit(limit).all()
+
+@router.get("/{job_id}", response_model=JobRead)
+def get_job(job_id: UUID, db: Session = Depends(get_db)):
+    job = db.query(Job).get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    return job
+
+@router.delete("/{job_id}")
+def cancel_job(job_id: UUID, db: Session = Depends(get_db)):
+    job = db.query(Job).get(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    if job.status in ["completed", "failed"]:
+        raise HTTPException(400, "Cannot cancel a completed or failed job")
+    job.status = "cancelled"
+    db.commit()
+    return {"message": "Job cancelled"}
