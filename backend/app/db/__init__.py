@@ -1,3 +1,14 @@
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from app.config import DATABASE_URL
+
+# Database engine
+engine = create_engine(DATABASE_URL)
+
+# Session factory
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Import your models
 from .base import Base
 from .user import User
 from .report import Report
@@ -15,5 +26,7 @@ __all__ = [
     "Agent",
     "Tool",
     "Job",
-    "AuditLog"
+    "AuditLog",
+    "SessionLocal",
+    "engine"
 ]
