@@ -4,7 +4,7 @@ from uuid import UUID
 from app.db.job import Job
 from app.schemas.job import JobCreate, JobRead
 from app.dependencies import get_db
-from app.utils.task_helpers import run_job_in_background
+from app.services.job_runner import run_job_in_background, _process_job
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 

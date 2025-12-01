@@ -7,7 +7,7 @@ from app.api.report_router import router as report_router
 from app.api.tool_router import router as tool_router
 from app.api.job_router import router as job_router
 
-app = FastAPI()
+app = FastAPI(title="Multi Agent Research Backend")
 
 app.include_router(auth_router)
 app.include_router(users_router)

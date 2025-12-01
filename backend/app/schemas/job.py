@@ -14,6 +14,7 @@ class JobRead(BaseModel):
     input_data: Optional[Any] = None
     output_data: Optional[Any] = None
     status: str
+    progress: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # Pydantic v2
