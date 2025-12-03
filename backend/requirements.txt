@@ -8,3 +8,6 @@ email-validator
 python-jose[cryptography]
 passlib[bcrypt]
 alembic
+pydantic-settings  
+python-multipart
+kafka-python==2.0.2
