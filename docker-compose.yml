@@ -1,3 +1,4 @@
+version: "3.9"
 
 services:
   postgres:
@@ -23,8 +24,46 @@ services:
       - "8000:8000"
     depends_on:
       - postgres
+      - kafka
     volumes:
       - ./backend:/app
+    restart: always
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # -------------------------------------------
+  # ZooKeeper
+  # -------------------------------------------
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: research-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    restart: always
+
+  # -------------------------------------------
+  # Kafka (Stable + Correct Config)
+  # -------------------------------------------
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: research-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # SINGLE listener = 100% stable
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     restart: always
 
 volumes:
